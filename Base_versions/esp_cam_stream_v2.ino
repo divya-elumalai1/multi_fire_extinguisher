@@ -3,8 +3,8 @@
 #include <esp32cam.h>
 #include "esp_heap_caps.h"
 
-const char* WIFI_SSID = "keto's lab";
-const char* WIFI_PASS = "keto90666";
+const char* WIFI_SSID = "ssid";
+const char* WIFI_PASS = "pass";
 
 WebServer server(80);
 

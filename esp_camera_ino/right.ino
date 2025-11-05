@@ -6,11 +6,11 @@
 #include "esp_heap_caps.h"
 
 // ---------- WiFi Configuration ----------
-const char* WIFI_SSID = "keto's lab";
-const char* WIFI_PASS = "keto90666";
+const char* WIFI_SSID = "fireextinguisher";
+const char* WIFI_PASS = "fire12345678";
 
 // ---------- Static IP Setup (Change if needed) ----------
-IPAddress local_IP(192, 168, 0, 50);  // <-- choose an unused IP in your network
+IPAddress local_IP(192, 168, 0, 52);  // <-- choose an unused IP in your network
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(8, 8, 8, 8);
@@ -134,22 +134,22 @@ void setup() {
   }
 
   // ---------- Server Routes ----------
-  server.on("/front/cam-lo.jpg", handleJpgLo);
-  server.on("/front/cam-mid.jpg", handleJpgMid);
-  server.on("/front/cam-hi.jpg", handleJpgHi);
+  server.on("/right/cam-lo.jpg", handleJpgLo);
+  server.on("/right/cam-mid.jpg", handleJpgMid);
+  server.on("/right/cam-hi.jpg", handleJpgHi);
   server.begin();
 
   Serial.println("HTTP server started.");
   Serial.println("Available URLs:");
   Serial.print("  http://");
   Serial.print(WiFi.localIP());
-  Serial.println("/front/cam-lo.jpg");
+  Serial.println("/right/cam-lo.jpg");
   Serial.print("  http://");
   Serial.print(WiFi.localIP());
-  Serial.println("/front/cam-mid.jpg");
+  Serial.println("/right/cam-mid.jpg");
   Serial.print("  http://");
   Serial.print(WiFi.localIP());
-  Serial.println("/front/cam-hi.jpg");
+  Serial.println("/right/cam-hi.jpg");
   Serial.println("or use http://esp32cam.local/ if supported.");
 }
 

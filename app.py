@@ -15,7 +15,10 @@ st.set_page_config(page_title="Multi Fire Extinguisher", layout="wide")
 # Default Settings
 # ----------------------------
 defaults = {
-    "CAM_URL": "http://192.168.0.50/front/cam-mid.jpg",
+    "CAM_FRONT": "http://192.168.0.50/front/cam-mid.jpg",
+    "CAM_BACK": "http://192.168.0.51/back/cam-mid.jpg",
+    "CAM_RIGHT": "http://192.168.0.52/right/cam-mid.jpg",
+    "CAM_LEFT": "http://192.168.0.53/left/cam-mid.jpg",
     "model_path": "Model/trained_model.pth",
     "prob_threshold": 85,
     "email_enable": False,
@@ -35,7 +38,14 @@ for k, v in defaults.items():
 # ----------------------------
 st.sidebar.title("⚙️ Settings")
 
-CAM_URL = st.sidebar.text_input("Camera URL", value=st.session_state.CAM_URL)
+st.sidebar.subheader("Camera URLs")
+CAM_FRONT = st.sidebar.text_input("Front Camera URL", value=st.session_state.CAM_FRONT)
+CAM_BACK = st.sidebar.text_input("Back Camera URL", value=st.session_state.CAM_BACK)
+CAM_RIGHT = st.sidebar.text_input("Right Camera URL", value=st.session_state.CAM_RIGHT)
+CAM_LEFT = st.sidebar.text_input("Left Camera URL", value=st.session_state.CAM_LEFT)
+
+st.sidebar.divider()
+
 model_path = st.sidebar.text_input("Model path", value=st.session_state.model_path)
 prob_threshold = st.sidebar.slider("Alert Probability Threshold (%)", 50, 100, st.session_state.prob_threshold)
 email_enable = st.sidebar.checkbox("Enable Email Alerts", value=st.session_state.email_enable)
@@ -52,7 +62,10 @@ frame_delay = st.sidebar.number_input("Frame Delay (s)", min_value=0.05, value=s
 # Save Settings Button ✅
 # ----------------------------
 if st.sidebar.button("💾 Save Settings"):
-    st.session_state.CAM_URL = CAM_URL
+    st.session_state.CAM_FRONT = CAM_FRONT
+    st.session_state.CAM_BACK = CAM_BACK
+    st.session_state.CAM_RIGHT = CAM_RIGHT
+    st.session_state.CAM_LEFT = CAM_LEFT
     st.session_state.model_path = model_path
     st.session_state.prob_threshold = prob_threshold
     st.session_state.email_enable = email_enable
@@ -85,13 +98,12 @@ emailer = Emailer(
 # ----------------------------
 # Stream Controls
 # ----------------------------
-st.title("🔥 Multi Fire Extinguisher — Live Detection")
+st.title("🔥 Multi Fire Extinguisher — Live Multi-Camera Detection")
 
-# Narrower image area on the left, controls/status on the right
-col_left, col_right = st.columns([2, 1])
-with col_left:
-    frame_placeholder = st.empty()
-with col_right:
+col1, col2 = st.columns([2, 1])
+with col1:
+    st.subheader("📹 Live Streams")
+with col2:
     start = st.button("▶️ Start Stream")
     stop = st.button("⏹️ Stop Stream")
     status_placeholder = st.empty()
@@ -105,44 +117,58 @@ if "running" not in st.session_state:
     st.session_state.running = False
 
 # ----------------------------
-# Continuous Live Stream (No Flicker)
+# Multi-Camera Stream
 # ----------------------------
+CAMERAS = {
+    "Front": st.session_state.CAM_FRONT,
+    "Back": st.session_state.CAM_BACK,
+    "Right": st.session_state.CAM_RIGHT,
+    "Left": st.session_state.CAM_LEFT,
+}
+
 if st.session_state.running:
     last_sent_time = 0
-    status_placeholder.info("🟢 Streaming... Press Stop to end.")
-    frame_window = frame_placeholder.image([], channels="RGB")
+    status_placeholder.info("🟢 Streaming all cameras... Press Stop to end.")
+
+    # Create 4 placeholders (2x2 layout)
+    row1_col1, row1_col2 = st.columns(2)
+    row2_col1, row2_col2 = st.columns(2)
+    cam_placeholders = {
+        "Front": row1_col1.empty(),
+        "Back": row1_col2.empty(),
+        "Right": row2_col1.empty(),
+        "Left": row2_col2.empty(),
+    }
 
     while st.session_state.running:
-        frame = fetch_frame_from_url(st.session_state.CAM_URL)
+        for cam_name, cam_url in CAMERAS.items():
+            frame = fetch_frame_from_url(cam_url)
+            if frame is None:
+                cam_placeholders[cam_name].warning(f"⚠️ {cam_name} camera offline...")
+                continue
 
-        if frame is None:
-            status_placeholder.warning("⚠️ Waiting for camera feed...")
-            time.sleep(1)
-            continue
+            # Predict
+            label, prob, bbox = predict_frame(frame, model)
+            color = (0, 255, 0) if label == "Neutral" else (0, 0, 255)
+            frame = draw_bbox_on_frame(frame, bbox, label, prob, color=color)
 
-        # Predict
-        label, prob, bbox = predict_frame(frame, model)
-        color = (0, 255, 0) if label == "Neutral" else (0, 0, 255)
-        frame = draw_bbox_on_frame(frame, bbox, label, prob, color=color)
+            # Email alert (one for all)
+            if emailer and label in ("Fire", "Smoke") and prob >= st.session_state.prob_threshold:
+                if time.time() - last_sent_time > st.session_state.email_interval:
+                    subject = f"🔥 ALERT: {label} detected in {cam_name} camera"
+                    html = f"""
+                    <div style='font-family: Arial, sans-serif;'>
+                        <h3>⚠️ {label} Detected in {cam_name} Camera</h3>
+                        <p><b>Probability:</b> {prob:.2f}%</p>
+                        <p><b>Time:</b> {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
+                    </div>
+                    """
+                    emailer.send_alert(subject, html, frame)
+                    last_sent_time = time.time()
 
-        # Email alert
-        if emailer and label in ("Fire", "Smoke") and prob >= st.session_state.prob_threshold:
-            if time.time() - last_sent_time > st.session_state.email_interval:
-                subject = f"🔥 ALERT: {label} Detected"
-                html = f"""
-                <div style='font-family: Arial, sans-serif;'>
-                    <h3>⚠️ {label} Detected</h3>
-                    <p><b>Probability:</b> {prob:.2f}%</p>
-                    <p><b>Time:</b> {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
-                </div>
-                """
-                emailer.send_alert(subject, html, frame)
-                last_sent_time = time.time()
-
-        # Update frame (no flicker)
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # Render smaller preview to avoid overly large image
-        frame_window.image(frame_rgb, channels="RGB", width=480)
+            # Convert to RGB and show
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            cam_placeholders[cam_name].image(frame_rgb, channels="RGB", width=480, caption=f"{cam_name} Camera")
 
         time.sleep(st.session_state.frame_delay)
 
