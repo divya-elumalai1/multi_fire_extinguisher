@@ -7,6 +7,9 @@ from PIL import Image
 import urllib.request
 import time  # ✅ Add this
 
+# Replace the URL with the ESP32-CAM endpoint
+url = 'http://esp32cam.local/front/cam-mid.jpg'
+
 # Load the pre-trained model
 print("[INFO] loading model...")
 model = torch.load(
@@ -33,11 +36,10 @@ def predict(image):
     return class_names[idx], prob
 
 
-# Replace the URL with the ESP32-CAM endpoint
-url = 'http://192.168.0.11/cam-mid.jpg'
+
 
 print("[INFO] Starting IP camera stream...")
-frame_delay = 0.2  # ✅ Adjust delay here (seconds) — 0.1–0.3 is ideal
+frame_delay = 0.1  # ✅ Adjust delay here (seconds) — 0.1–0.3 is ideal
 
 while True:
     try:
