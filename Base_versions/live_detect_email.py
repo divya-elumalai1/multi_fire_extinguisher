@@ -9,9 +9,7 @@ import yagmail
 import time
 import random
 
-# -------------------------------
-# 🔧 CONFIGURATION
-# -------------------------------
+
 MODEL_PATH = '/Users/divya/Documents/Arduino/Fire_fighting_robot/Fire_detect_ml/Model/trained_model.pth'
 CAM_URL = 'http://192.168.0.11/cam-mid.jpg'  # Update with your ESP32-CAM IP
 
@@ -23,16 +21,12 @@ EMAIL_INTERVAL = 60  # seconds between alerts
 PROB_THRESHOLD = 85  # minimum % confidence to trigger email
 FRAME_DELAY = 0.2    # seconds between frames (stability delay)
 
-# -------------------------------
-# 🧠 LOAD MODEL
-# -------------------------------
+
 print("[INFO] Loading model...")
 model = torch.load(MODEL_PATH, map_location=torch.device('cpu'), weights_only=False)
 class_names = ['Fire', 'Neutral', 'Smoke']
 
-# -------------------------------
-# ✉️ SETUP EMAIL
-# -------------------------------
+
 try:
     yag = yagmail.SMTP(EMAIL_SENDER, EMAIL_APP_PASS)
     print("[INFO] Email service connected.")
@@ -40,9 +34,7 @@ except Exception as e:
     yag = None
     print(f"[WARN] Email setup failed: {e}")
 
-# -------------------------------
-# 🔍 PREDICTION FUNCTION
-# -------------------------------
+
 def predict(image):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -58,10 +50,8 @@ def predict(image):
         prob = pred[0][idx].item() * 100
     return class_names[idx], prob
 
-# -------------------------------
-# ✉️ EMAIL ALERT FUNCTION
-# -------------------------------
-def send_alert_email(prediction, prob, frame, compartment_no):
+
+def send_alert_email(prediction, prob, frame):
     if not yag:
         print("[WARN] Email service not available.")
         return
@@ -71,7 +61,6 @@ def send_alert_email(prediction, prob, frame, compartment_no):
     <div style="font-family: Arial, sans-serif; padding: 15px; border-radius: 10px; background-color:#f8d7da;">
         <h2 style="color:#721c24;">⚠️ Alert: {prediction} Detected</h2>
         <p><b>Probability:</b> {prob:.2f}%</p>
-        <p><b>Compartment:</b> {compartment_no}</p>
         <p>Time: {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
     </div>
     """
@@ -86,9 +75,7 @@ def send_alert_email(prediction, prob, frame, compartment_no):
     except Exception as e:
         print(f"[WARN] Email failed: {e}")
 
-# -------------------------------
-# 🎥 MAIN LOOP
-# -------------------------------
+
 print("[INFO] Starting IP camera stream...")
 last_sent_time = 0
 
@@ -116,7 +103,6 @@ while True:
         # ---- Fire / Smoke alert logic ----
         if prediction in ['Fire', 'Smoke'] and prob > PROB_THRESHOLD:
             if (time.time() - last_sent_time) > EMAIL_INTERVAL:
-                room_number = random.randint(1, 10)
 
                 # Detect bright area for bounding box
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -127,7 +113,7 @@ while True:
                     x, y, w, h = cv2.boundingRect(largest)
                     cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
 
-                send_alert_email(prediction, prob, frame, room_number)
+                send_alert_email(prediction, prob, frame)
                 last_sent_time = time.time()
 
         # ---- Display ----
