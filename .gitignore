@@ -1,0 +1,8 @@
+/live_detect_v3.py
+
+.DS_Store
+
+venv/
+
+
+Model/trained_model.pth
