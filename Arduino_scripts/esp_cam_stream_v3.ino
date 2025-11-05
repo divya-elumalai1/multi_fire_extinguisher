@@ -1,4 +1,4 @@
-// static ip
+#include "esp_camera.h"  
 #include <WebServer.h>
 #include <WiFi.h>
 #include <esp32cam.h>
@@ -88,6 +88,16 @@ void setup() {
 
   bool ok = Camera.begin(cfg);
   Serial.println(ok ? "CAMERA OK" : "CAMERA FAIL");
+
+  // --- Rotate the image (flip vertically / mirror horizontally) ---
+  sensor_t *s = esp_camera_sensor_get();
+  if (s) {
+  s->set_vflip(s, 1);    // 1 = flip vertically (fix upside down)
+  s->set_hmirror(s, 0);  // 1 = mirror horizontally, 0 = normal
+  Serial.println("Camera orientation adjusted (VFLIP ON, HMIRROR OFF)");
+  }
+
+
 
   printMemoryStats();
 

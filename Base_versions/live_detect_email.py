@@ -9,9 +9,8 @@ import yagmail
 import time
 import random
 
-
 MODEL_PATH = '/Users/divya/Documents/Arduino/Fire_fighting_robot/Fire_detect_ml/Model/trained_model.pth'
-CAM_URL = 'http://192.168.0.11/cam-mid.jpg'  # Update with your ESP32-CAM IP
+CAM_URL = 'http://esp32cam.local/front/cam-mid.jpg'  # Update with your ESP32-CAM IP
 
 EMAIL_SENDER = "multifireextinguisher@gmail.com"
 EMAIL_APP_PASS = "kusw ujez lwkm vtud".replace(" ", "")

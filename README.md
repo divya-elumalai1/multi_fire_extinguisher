@@ -27,3 +27,24 @@ static
 21:42:17.973 ->   http://192.168.0.50/front/cam-mid.jpg
 21:42:18.006 ->   http://192.168.0.50/front/cam-hi.jpg
 21:42:18.006 -> or use http://esp32cam.local/ if supported.
+
+
+
+http://192.168.0.50/front/stream
+or
+http://esp32cam.local/front/stream.
+
+
+
+multi_fire_extinguisher/
+├─ app.py # Streamlit app (UI + controller)
+├─ requirements.txt # Python dependencies
+├─ README.md
+├─ Model/
+│ └─ trained_model.pth # your existing model (don't commit large files to GitHub)
+├─ src/
+│ ├─ detector.py # model load + predict function
+│ ├─ emailer.py # email helper (yagmail wrapper)
+│ └─ utils.py # camera frame fetch + drawing helpers
+├─ Arduino_scripts/ # your existing Arduino files
+└─ .gitignore
