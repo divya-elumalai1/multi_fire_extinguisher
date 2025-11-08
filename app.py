@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 import cv2
+import urllib.request
 from datetime import datetime
 from src.detector import load_model, predict_frame
 from src.utils import fetch_frame_from_url, draw_bbox_on_frame
@@ -15,10 +16,10 @@ st.set_page_config(page_title="Multi Fire Extinguisher", layout="wide")
 # Default Settings
 # ----------------------------
 defaults = {
-    "CAM_FRONT": "http://192.168.0.50/front/cam-mid.jpg",
-    "CAM_BACK": "http://192.168.0.51/back/cam-mid.jpg",
-    "CAM_RIGHT": "http://192.168.0.52/right/cam-mid.jpg",
-    "CAM_LEFT": "http://192.168.0.53/left/cam-mid.jpg",
+    "CAM_FRONT": "http://172.17.204.50/front/cam-mid.jpg",
+    "CAM_BACK": "http://172.17.204.51/back/cam-mid.jpg",
+    "CAM_RIGHT": "http://172.17.204.52/right/cam-mid.jpg",
+    "CAM_LEFT": "http://172.17.204.53/left/cam-mid.jpg",
     "model_path": "Model/trained_model.pth",
     "prob_threshold": 85,
     "email_enable": False,
@@ -55,6 +56,9 @@ with st.sidebar.expander("Email Configuration", expanded=False):
     email_app_pass = st.text_input("Email App Password", type="password", value=st.session_state.email_app_pass)
     email_receiver = st.text_input("Email Receiver", value=st.session_state.email_receiver)
     email_interval = st.number_input("Email Interval (s)", min_value=10, value=st.session_state.email_interval)
+    # Live validation feedback
+    if email_enable and (not email_sender or not email_app_pass or not email_receiver):
+        st.warning("Email is enabled but sender/app password/receiver are not all set.")
 
 frame_delay = st.sidebar.number_input("Frame Delay (s)", min_value=0.05, value=st.session_state.frame_delay, step=0.05)
 
@@ -74,7 +78,14 @@ if st.sidebar.button("💾 Save Settings"):
     st.session_state.email_receiver = email_receiver
     st.session_state.email_interval = email_interval
     st.session_state.frame_delay = frame_delay
-    st.toast("✅ Settings saved successfully!")
+
+    # (Re)build emailer in session state
+    if email_enable and email_sender and email_app_pass and email_receiver:
+        st.session_state.emailer = Emailer(email_sender, email_app_pass, email_receiver)
+        st.toast("✅ Settings saved and emailer initialized")
+    else:
+        st.session_state.emailer = None
+        st.toast("✅ Settings saved. Email disabled or incomplete config.")
 
 # ----------------------------
 # Load Model Once (Cached)
@@ -89,11 +100,21 @@ except Exception as e:
     st.error(f"❌ Failed to load model: {e}")
     st.stop()
 
-emailer = Emailer(
-    st.session_state.email_sender,
-    st.session_state.email_app_pass,
-    st.session_state.email_receiver
-) if st.session_state.email_enable else None
+# Ensure emailer exists in session_state based on current settings
+if "emailer" not in st.session_state:
+    if (
+        st.session_state.email_enable
+        and st.session_state.email_sender
+        and st.session_state.email_app_pass
+        and st.session_state.email_receiver
+    ):
+        st.session_state.emailer = Emailer(
+            st.session_state.email_sender,
+            st.session_state.email_app_pass,
+            st.session_state.email_receiver,
+        )
+    else:
+        st.session_state.emailer = None
 
 # ----------------------------
 # Stream Controls
@@ -107,6 +128,24 @@ with col2:
     start = st.button("▶️ Start Stream")
     stop = st.button("⏹️ Stop Stream")
     status_placeholder = st.empty()
+    email_status_placeholder = st.empty()
+
+# Motor control UI
+with st.expander("🛠️ Motor Control"):
+    cmd_value = st.text_input("Command (cmd)", value="1")
+    send_cmd = st.button("Send Command")
+    motor_resp_area = st.empty()
+
+    if send_cmd:
+        base_url = "http://172.17.204.50/motorcmds?cmd="
+        url = f"{base_url}{cmd_value}"
+        try:
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                body = resp.read().decode("utf-8", errors="ignore")
+                motor_resp_area.success(f"Sent to {url}. Status: {resp.status}. Body: {body[:500]}")
+        except Exception as e:
+            motor_resp_area.error(f"Failed to send command to {url}: {e}")
 
 if start:
     st.session_state.running = True
@@ -153,7 +192,7 @@ if st.session_state.running:
             frame = draw_bbox_on_frame(frame, bbox, label, prob, color=color)
 
             # Email alert (one for all)
-            if emailer and label in ("Fire", "Smoke") and prob >= st.session_state.prob_threshold:
+            if st.session_state.emailer and label in ("Fire", "Smoke") and prob >= st.session_state.prob_threshold:
                 if time.time() - last_sent_time > st.session_state.email_interval:
                     subject = f"🔥 ALERT: {label} detected in {cam_name} camera"
                     html = f"""
@@ -163,7 +202,14 @@ if st.session_state.running:
                         <p><b>Time:</b> {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
                     </div>
                     """
-                    emailer.send_alert(subject, html, frame)
+                    try:
+                        ok = st.session_state.emailer.send_alert(subject, html, frame)
+                        if ok:
+                            email_status_placeholder.success(f"Email sent: {subject}")
+                        else:
+                            email_status_placeholder.warning("Email send attempted but failed. Check logs and settings.")
+                    except Exception as e:
+                        email_status_placeholder.error(f"Email exception: {e}")
                     last_sent_time = time.time()
 
             # Convert to RGB and show

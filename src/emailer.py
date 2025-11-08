@@ -2,7 +2,6 @@ import yagmail
 import time
 import cv2
 
-
 class Emailer:
     def __init__(self, sender: str, app_pass: str, receiver: str):
         try:

@@ -61,6 +61,15 @@ Add these static IPs to stream the cameras. Use any one at a time as the Camera 
 - Left:   http://192.168.0.53/left/cam-mid.jpg
 
 
+
+phone hotspot
+
+- Front:  http://172.17.204.50/front/cam-mid.jpg
+- Back:   http://172.17.204.51/back/cam-mid.jpg
+- Right:  http://172.17.204.52/right/cam-mid.jpg
+- Left:   http://172.17.204.53/left/cam-mid.jpg
+
+
 ## ESP32-CAM Wi‑Fi Hotspot
 Turn on a hotspot with the following SSID and password (used by the cameras):
 
