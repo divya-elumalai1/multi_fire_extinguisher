@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Fire Detection Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --sidebar-bg: #161920;
+            --card-bg: #1e2229;
+            --text-primary: #e0e6ed;
+            --text-secondary: #94a3b8;
+            --accent-fire: #ef4444;
+            --accent-safe: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-warn: #eab308;
+            --border-color: #2a2f3a;
+            --input-bg: #0f1115;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebars */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-right {
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .sidebar-header {
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .section-header {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin: 12px 0 16px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        /* Inputs */
+        .form-group {
+            margin-bottom: 8px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        /* Checkbox Styling */
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+            flex-shrink: 0;
+            margin: 0;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            position: relative;
+            pointer-events: auto;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #2d333d;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-danger {
+            background: var(--accent-fire);
+            border-color: var(--accent-fire);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-warn {
+            background: var(--accent-warn);
+            border-color: var(--accent-warn);
+            color: #111;
+        }
+
+        .btn-warn:hover {
+            background: #ca8a04;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Camera Card */
+        .camera-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .camera-header-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .camera-label {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        img.stream {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Offline Placeholder */
+        .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #111;
+            z-index: 1;
+        }
+
+        .placeholder-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-top: 12px;
+        }
+
+        /* Checkbox List */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--input-bg);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+
+        .divider {
+            border-top: 1px solid var(--border-color);
+            margin: 16px 0;
+        }
+
+        /* Motor Control Grid */
+        .motor-control-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 180px;
+            margin: 0 auto 20px auto;
+        }
+
+        .motor-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            color: var(--text-secondary);
+        }
+
+        .motor-btn:active {
+            background: var(--accent-blue);
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .motor-btn.up {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+        }
+
+        .motor-btn.left {
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+        }
+
+        .motor-btn.right {
+            grid-column: 3 / 4;
+            grid-row: 2 / 3;
+        }
+
+        .motor-btn.down {
+            grid-column: 2 / 3;
+            grid-row: 3 / 4;
+        }
+
+        /* Action Toggles */
+        .action-toggle-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            padding: 10px 4px;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .toggle-btn .emoji {
+            font-size: 1.2rem;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: #2d333d;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .sidebar-right {
+                border-left: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LEFT SIDEBAR: CONFIG -->
+    <div class="sidebar">
+        <div class="sidebar-header" onclick="toggleConfig()"
+            style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <span id="config-toggle-icon">▶</span>
+            <span>⚙️ System Config</span>
+        </div>
+
+        <div id="config-collapsible" style="display: none;">
+
+            <div class="section-header">Camera URLs</div>
+            <form id="config-form">
+                <div id="config-inputs">
+                    <!-- Injected via JS -->
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">All Stream Configs</button>
+            </form>
+
+            <div class="section-header">🤖 Motor API</div>
+            <form id="motor-config-form">
+                <div class="form-group">
+                    <label class="form-label">Robot Hostname / IP</label>
+                    <input type="text" id="motor-host" placeholder="firecamfront.local" required>
+                </div>
+                <div class="input-group">
+                    <input type="number" id="motor-port" placeholder="Port" style="width: 80px" required>
+                    <input type="text" id="motor-path" placeholder="/front/motor" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Motor Config</button>
+            </form>
+
+            <div class="section-header">📧 Email Alert Config</div>
+            <form id="email-config-form">
+                <div class="form-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="email-enable"> Enable Email Alerts
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sender Email</label>
+                    <input type="text" id="email-sender" readonly style="opacity: 0.7; cursor: not-allowed;"
+                        title="Sender email is fixed in config">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Receiver Emails (comma separated)</label>
+                    <input type="text" id="email-receiver" placeholder="email1@example.com, email2@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Alert Interval (seconds)</label>
+                    <input type="number" id="email-interval" placeholder="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Alert Types</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" name="alert-type" value="smoke">
+                            Smoke</label>
+                        <label class="checkbox-item"><input type="checkbox" name="alert-type" value="fire"> Fire</label>
+                        <label class="checkbox-item"><input type="checkbox" name="alert-type" value="neutral">
+                            Neutral</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Email Config</button>
+            </form>
+        </div> <!-- End of config-collapsible -->
+    </div>
+
+    <!-- MAIN CONTENT: GRID -->
+    <div class="main-content">
+        <div class="header">
+            <h1>🔥 FireCam Monitor</h1>
+            <div class="status-badge" style="background:#2a2f3a; padding:4px 12px; border-radius:20px;">
+                System Ready (Standby)
+            </div>
+        </div>
+
+        <div class="grid" id="camera-grid">
+            <!-- Injected via JS -->
+        </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: CONTROLS -->
+    <div class="sidebar sidebar-right">
+        <div class="sidebar-header">🎮 Controls</div>
+
+        <div class="section-header">Stream Manager</div>
+        <div class="form-group">
+            <label class="form-label">Select Cameras to Stream</label>
+            <div class="checkbox-group" id="stream-selection">
+                <label class="checkbox-item"><input type="checkbox" value="front" checked> Front Camera</label>
+                <label class="checkbox-item"><input type="checkbox" value="back" checked> Back Camera</label>
+                <label class="checkbox-item"><input type="checkbox" value="left" checked> Left Camera</label>
+                <label class="checkbox-item"><input type="checkbox" value="right" checked> Right Camera</label>
+            </div>
+        </div>
+        <button onclick="startSelectedStreams()" class="btn btn-primary btn-block">Start Selected</button>
+        <button onclick="stopSelectedStreams()" class="btn btn-danger btn-block">Stop Selected</button>
+
+        <div class="section-header">🤖 Motor Control</div>
+        <div class="form-group" style="margin-bottom: 16px;">
+            <div class="checkbox-group">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="autonomous-mode" onchange="toggleAutonomousMode()">
+                    <span>Autonomous Mode</span>
+                </label>
+            </div>
+            <div id="autonomous-status" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; min-height: 16px;"></div>
+        </div>
+        <div class="motor-control-grid">
+            <button class="btn motor-btn up" onmousedown="motorDirect('6')" onmouseup="motorDirect('p')"
+                ontouchstart="motorDirect('6')" ontouchend="motorDirect('p')">▲</button>
+            <button class="btn motor-btn left" onmousedown="motorDirect('9')" onmouseup="motorDirect('p')"
+                ontouchstart="motorDirect('9')" ontouchend="motorDirect('p')">◀</button>
+            <button class="btn motor-btn right" onmousedown="motorDirect('8')" onmouseup="motorDirect('p')"
+                ontouchstart="motorDirect('8')" ontouchend="motorDirect('p')">▶</button>
+            <button class="btn motor-btn down" onmousedown="motorDirect('7')" onmouseup="motorDirect('p')"
+                ontouchstart="motorDirect('7')" ontouchend="motorDirect('p')">▼</button>
+        </div>
+
+        <div class="action-toggle-row">
+            <button class="toggle-btn" id="btn-mud" onclick="toggleMotorAction('mud')">
+                <span class="emoji">🚜🟫</span>
+                <span>Mud</span>
+            </button>
+            <button class="toggle-btn" id="btn-moist" onclick="toggleMotorAction('moist')">
+                <span class="emoji">💦</span>
+                <span>Moist</span>
+            </button>
+            <button class="toggle-btn" id="btn-pump" onclick="toggleMotorAction('pump')">
+                <span class="emoji">🚰</span>
+                <span>Pump</span>
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="form-group">
+            <label class="form-label">Manual Command Code</label>
+            <input type="text" id="motor-cmd" placeholder="e.g. 0 or 1" value="0">
+            <div id="motor-status" style="font-size: 0.8rem; margin-top: 6px; min-height: 18px;"></div>
+        </div>
+        <button onclick="sendMotorCommand()" class="btn btn-warn btn-block">Send Command</button>
+
+        <div class="divider"></div>
+        <div class="form-group">
+            <label class="form-label">System Stats</label>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+                <div>Active Processes: <span id="active-procs" style="color:var(--text-primary)">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CAMERAS = ['front', 'back', 'left', 'right'];
+        let currentConfig = {};
+
+        // --- Initialization ---
+
+        async function loadConfig() {
+            try {
+                // Load Camera Config
+                const res = await fetch('/api/config');
+                currentConfig = await res.json();
+                renderConfigInputs();
+                renderGrid();
+
+                // Load Motor Config
+                const mRes = await fetch('/api/motor/config');
+                const mConf = await mRes.json();
+                document.getElementById('motor-host').value = mConf.hostname;
+                document.getElementById('motor-port').value = mConf.port;
+                document.getElementById('motor-path').value = mConf.path;
+
+                // Load Email Config
+                await loadEmailConfig();
+
+                // Load Autonomous Mode Config
+                await loadAutonomousModeConfig();
+
+            } catch (e) {
+                console.error("Failed to load config", e);
+            }
+        }
+
+        async function loadAutonomousModeConfig() {
+            try {
+                const res = await fetch('/api/autonomous/config');
+                const conf = await res.json();
+                // Default to false (unchecked) if not explicitly set
+                const enabled = conf.enabled === true ? true : false;
+                document.getElementById('autonomous-mode').checked = enabled;
+                updateAutonomousStatus(enabled);
+            } catch (e) {
+                console.error("Failed to load autonomous mode config", e);
+                // On error, default to unchecked
+                document.getElementById('autonomous-mode').checked = false;
+                updateAutonomousStatus(false);
+            }
+        }
+
+        function updateAutonomousStatus(enabled, success = null) {
+            const statusEl = document.getElementById('autonomous-status');
+            if (statusEl) {
+                if (success === true) {
+                    // Success message
+                    statusEl.innerText = `Config updated: Autonomous mode ${enabled ? 'enabled' : 'disabled'}`;
+                    statusEl.style.color = 'var(--accent-safe)';
+                } else if (success === false) {
+                    // Error message
+                    statusEl.innerText = '✗ Failed to update config';
+                    statusEl.style.color = 'var(--accent-fire)';
+                } else {
+                    // Just show current state (no success/error indication)
+                    if (enabled) {
+                        statusEl.innerText = '✓ Autonomous mode activated';
+                        statusEl.style.color = 'var(--accent-safe)';
+                    } else {
+                        statusEl.innerText = '';
+                    }
+                }
+            }
+        }
+
+        async function toggleAutonomousMode() {
+            const checkbox = document.getElementById('autonomous-mode');
+            const enabled = checkbox.checked;
+            
+            // Show loading/current state
+            updateAutonomousStatus(enabled);
+            
+            try {
+                const response = await fetch('/api/autonomous/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: enabled })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Verify response and show success message only on successful response
+                const result = await response.json();
+                if (result.status === 'updated') {
+                    updateAutonomousStatus(enabled, true);
+                    console.log(`Autonomous mode ${enabled ? 'enabled' : 'disabled'}`);
+                } else {
+                    throw new Error('Unexpected response from server');
+                }
+            } catch (e) {
+                console.error("Failed to update autonomous mode", e);
+                // Revert checkbox on error
+                checkbox.checked = !enabled;
+                // Show error message
+                updateAutonomousStatus(!enabled, false);
+            }
+        }
+
+        async function loadEmailConfig() {
+            try {
+                const res = await fetch('/api/email/config');
+                const conf = await res.json();
+
+                document.getElementById('email-enable').checked = conf.enable;
+                document.getElementById('email-sender').value = conf.sender || '';
+                document.getElementById('email-receiver').value = (conf.receiver || []).join(', ');
+                document.getElementById('email-interval').value = conf.interval;
+
+                const alertTypes = conf.alert_types || [];
+                document.querySelectorAll('input[name="alert-type"]').forEach(cb => {
+                    cb.checked = alertTypes.includes(cb.value);
+                });
+            } catch (e) {
+                console.error("Failed to load email config", e);
+            }
+        }
+
+        function toggleConfig() {
+            const content = document.getElementById('config-collapsible');
+            const icon = document.getElementById('config-toggle-icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
+        // --- Rendering ---
+
+        function renderConfigInputs() {
+            const container = document.getElementById('config-inputs');
+            container.innerHTML = '';
+
+            CAMERAS.forEach(cam => {
+                const conf = currentConfig[cam] || { hostname: '', port: 80, stream_path: '' };
+                const html = `
+                    <div class="form-group">
+                        <label class="form-label">${cam.toUpperCase()}</label>
+                        <input type="text" style="margin-bottom:8px" value="${conf.hostname}" name="${cam}_host">
+                        <div class="input-group">
+                            <input type="number" value="${conf.port}" name="${cam}_port" style="width: 80px">
+                            <input type="text" value="${conf.stream_path}" name="${cam}_path">
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('camera-grid');
+            grid.innerHTML = '';
+
+            CAMERAS.forEach(cam => {
+                const html = `
+                    <div class="camera-card">
+                        <div class="camera-header-overlay">
+                            <div class="camera-label">${cam}</div>
+                            <div class="camera-controls">
+                                <span style="font-size:0.8rem; margin-right:8px; text-shadow:0 1px 2px #000;" id="fps-${cam}"></span>
+                                <button class="icon-btn" onclick="refreshCamera('${cam}')" title="Reconnect">↻</button>
+                            </div>
+                        </div>
+                        <div class="video-container">
+                            <img class="stream" id="stream-${cam}" style="display:none" 
+                                 onerror="handleStreamError('${cam}')" 
+                                 onload="handleStreamLoad('${cam}')">
+                            <div class="placeholder" id="placeholder-${cam}">
+                                <div class="loading-spinner" id="loader-${cam}" style="display:none"></div>
+                                <span class="placeholder-text" id="status-text-${cam}">STANDBY</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += html;
+            });
+        }
+
+        // --- Config Actions ---
+
+        document.getElementById('config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newConfig = { cameras: {} };
+
+            CAMERAS.forEach(cam => {
+                newConfig.cameras[cam] = {
+                    hostname: formData.get(`${cam}_host`),
+                    port: parseInt(formData.get(`${cam}_port`)),
+                    stream_path: formData.get(`${cam}_path`)
+                };
+            });
+
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newConfig)
+            });
+            alert('Camera Configuration Saved!');
+        });
+
+        document.getElementById('motor-config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const config = {
+                hostname: document.getElementById('motor-host').value,
+                port: parseInt(document.getElementById('motor-port').value),
+                path: document.getElementById('motor-path').value
+            };
+
+            await fetch('/api/motor/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            alert('Motor Configuration Saved!');
+        });
+
+        document.getElementById('email-config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const receivers = document.getElementById('email-receiver').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            const alertTypes = Array.from(document.querySelectorAll('input[name="alert-type"]:checked'))
+                .map(cb => cb.value);
+
+            const config = {
+                enable: document.getElementById('email-enable').checked,
+                sender: document.getElementById('email-sender').value,
+                app_pass: "", // Handled server-side or kept if editing existing. 
+                // Actually the schema needs it. I'll fetch it and send it back.
+                receiver: receivers,
+                interval: parseInt(document.getElementById('email-interval').value),
+                alert_types: alertTypes
+            };
+
+            // To avoid overwriting app_pass with empty string if user didn't see it
+            // We'll fetch it again just before sending if needed, but the current API returns it.
+            // But for security, maybe we should just send what we have.
+
+            // Re-fetch full config to get the app_pass which is hidden/fixed
+            const res = await fetch('/api/email/config');
+            const currentMailConf = await res.json();
+            config.app_pass = currentMailConf.app_pass;
+
+            await fetch('/api/email/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            alert('Email Configuration Saved!');
+        });
+
+        // --- Control Actions ---
+
+        let actionStates = {
+            mud: false,    // false = close (0), true = open (1)
+            moist: false,  // false = off (3), true = on (2)
+            pump: false    // false = off (5), true = on (4)
+        };
+
+        async function toggleMotorAction(action) {
+            let cmd = '';
+            actionStates[action] = !actionStates[action];
+            const isActive = actionStates[action];
+
+            if (action === 'mud') {
+                cmd = isActive ? '1' : '0';
+            } else if (action === 'moist') {
+                cmd = isActive ? '2' : '3';
+            } else if (action === 'pump') {
+                cmd = isActive ? '4' : '5';
+            }
+
+            // Update UI
+            const btn = document.getElementById(`btn-${action}`);
+            if (isActive) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+
+            // Send Command
+            try {
+                await fetch('/api/motor/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmd })
+                });
+            } catch (e) {
+                console.error(`Failed to send ${action} command`, e);
+            }
+        }
+
+        async function motorDirect(cmd) {
+            try {
+                await fetch('/api/motor/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmd })
+                });
+            } catch (e) {
+                console.error("Failed to send direct motor command", e);
+            }
+        }
+
+        async function sendMotorCommand() {
+            const cmd = document.getElementById('motor-cmd').value;
+            const btn = document.querySelector('button[onclick="sendMotorCommand()"]');
+            const statusEl = document.getElementById('motor-status');
+            const originalText = btn.innerText;
+
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+            statusEl.innerText = '';
+            statusEl.style.color = '';
+
+            try {
+                const res = await fetch('/api/motor/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmd })
+                });
+                const data = await res.json();
+
+                if (data.status === 'sent') {
+                    statusEl.innerText = 'Sent';
+                    statusEl.style.color = 'var(--accent-safe)';
+                } else {
+                    statusEl.innerText = 'Failed';
+                    statusEl.style.color = 'var(--accent-fire)';
+                }
+            } catch (e) {
+                statusEl.innerText = 'Failed';
+                statusEl.style.color = 'var(--accent-fire)';
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function refreshCamera(cam) {
+            const loader = document.getElementById(`loader-${cam}`);
+            const statusText = document.getElementById(`status-text-${cam}`);
+            const img = document.getElementById(`stream-${cam}`);
+            const placeholder = document.getElementById(`placeholder-${cam}`);
+
+            if (loader) loader.style.display = 'block';
+            if (statusText) statusText.innerText = "RECONNECTING...";
+            if (placeholder) placeholder.style.display = 'flex';
+            if (img) {
+                img.style.display = 'none';
+                img.src = ''; // Clear src to force reload
+            }
+
+            await fetch(`/api/restart/${cam}`, { method: 'POST' });
+
+            // Force health check after restart (let health check set the src)
+            forceHealthCheck = true;
+            setTimeout(() => {
+                updateHealthStatus(true);
+            }, 2000);
+            setTimeout(() => {
+                forceHealthCheck = true;
+                updateHealthStatus(true);
+            }, 5000);
+        }
+
+        function getSelectedCameras() {
+            return Array.from(document.querySelectorAll('#stream-selection input:checked')).map(c => c.value);
+        }
+
+        async function startSelectedStreams() {
+            const selected = getSelectedCameras();
+            await fetch('/api/control/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cameras: selected })
+            });
+            // Show loading state for selected
+            selected.forEach(cam => {
+                const loader = document.getElementById(`loader-${cam}`);
+                const statusText = document.getElementById(`status-text-${cam}`);
+                const placeholder = document.getElementById(`placeholder-${cam}`);
+                const img = document.getElementById(`stream-${cam}`);
+
+                if (loader) loader.style.display = 'block';
+                if (statusText) statusText.innerText = "STARTING...";
+                if (placeholder) placeholder.style.display = 'flex';
+                // Clear any existing src to force fresh connection
+                if (img) {
+                    img.src = '';
+                    img.style.display = 'none';
+                }
+            });
+
+            // When starting streams, assume they will be active and switch to active mode immediately
+            // This ensures health checks run more frequently during startup
+            if (selected.length > 0 && !hasActiveStreams) {
+                hasActiveStreams = true;
+                stopHealthCheck();
+                startHealthCheck(); // This will use active interval (8s) instead of idle (15s)
+            }
+
+            // Force health check immediately, then again after streams have time to start
+            forceHealthCheck = true;
+            updateHealthStatus(true); // Bypass rate limit
+
+            // Check again after streams have time to start - more frequent checks for single camera
+            const checkIntervals = selected.length === 1 ? [1000, 2000, 4000, 7000, 10000] : [2000, 5000];
+            checkIntervals.forEach(delay => {
+                setTimeout(() => {
+                    forceHealthCheck = true;
+                    updateHealthStatus(true);
+                }, delay);
+            });
+        }
+
+        async function stopSelectedStreams() {
+            const selected = getSelectedCameras();
+            await fetch('/api/control/stop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cameras: selected })
+            });
+        }
+
+        // --- Health Status Update (only when page is visible) ---
+        let healthCheckInterval = null;
+        let lastHealthCheckTime = 0;
+        const HEALTH_CHECK_INTERVAL_ACTIVE = 8000; // 8 seconds when streams are active
+        const HEALTH_CHECK_INTERVAL_IDLE = 15000; // 15 seconds when idle
+        const MIN_TIME_BETWEEN_CHECKS = 5000; // 5 seconds minimum between checks
+        let hasActiveStreams = false;
+        let healthCheckPending = false;
+        let forceHealthCheck = false; // Flag to bypass rate limiting
+
+        function handleStreamError(cam) {
+            // Stream failed to load, show placeholder
+            const img = document.getElementById(`stream-${cam}`);
+            const placeholder = document.getElementById(`placeholder-${cam}`);
+            const statusText = document.getElementById(`status-text-${cam}`);
+
+            if (img && placeholder && statusText) {
+                img.style.display = 'none';
+                placeholder.style.display = 'flex';
+                statusText.innerText = "STREAM ERROR";
+            }
+        }
+
+        function handleStreamLoad(cam) {
+            // Stream loaded successfully
+            const img = document.getElementById(`stream-${cam}`);
+            const placeholder = document.getElementById(`placeholder-${cam}`);
+            const loader = document.getElementById(`loader-${cam}`);
+
+            if (img && placeholder) {
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+                if (loader) loader.style.display = 'none';
+            }
+        }
+
+        function updateHealthStatus(bypassRateLimit = false) {
+            // Prevent calls if tab is hidden
+            if (document.hidden) {
+                return;
+            }
+
+            // Prevent concurrent health checks
+            if (healthCheckPending) {
+                return;
+            }
+
+            // Rate limiting: don't check if we checked recently (unless forced)
+            const now = Date.now();
+            if (!bypassRateLimit && !forceHealthCheck && now - lastHealthCheckTime < MIN_TIME_BETWEEN_CHECKS) {
+                return;
+            }
+
+            // Clear force flag after using it
+            if (forceHealthCheck) {
+                forceHealthCheck = false;
+            }
+
+            healthCheckPending = true;
+            lastHealthCheckTime = now;
+
+            fetch('/health')
+                .then(res => res.json())
+                .then(data => {
+                    let activeCount = 0;
+                    let newHasActiveStreams = false;
+
+                    // Debug log
+                    if (Object.keys(data).length > 0) {
+                        console.log('[UI] Health check result:', data);
+                    }
+
+                    Object.entries(data).forEach(([cam, status]) => {
+                        const img = document.getElementById(`stream-${cam}`);
+                        const placeholder = document.getElementById(`placeholder-${cam}`);
+                        const loader = document.getElementById(`loader-${cam}`);
+                        const statusText = document.getElementById(`status-text-${cam}`);
+                        const fpsEl = document.getElementById(`fps-${cam}`);
+
+                        if (!img || !placeholder) return;
+
+                        if (status.online) {
+                            activeCount++;
+                            newHasActiveStreams = true;
+
+                            // Always update src when coming online to ensure fresh connection
+                            // This is especially important when starting individual cameras
+                            const currentSrc = img.src || '';
+                            const isPlaceholderVisible = placeholder.style.display !== 'none' && placeholder.style.display !== '';
+                            const isImageHidden = img.style.display === 'none' || img.style.display === '';
+
+                            // Update src if:
+                            // 1. No src set
+                            // 2. Src doesn't match this camera
+                            // 3. Image is hidden (stream not showing)
+                            // 4. Placeholder is visible (stream not active)
+                            const needsSrcUpdate = !currentSrc ||
+                                currentSrc === '' ||
+                                !currentSrc.includes(`/stream/${cam}`) ||
+                                isImageHidden ||
+                                isPlaceholderVisible;
+
+                            if (needsSrcUpdate) {
+                                // Set src with timestamp to force reload
+                                const newSrc = `/stream/${cam}?t=${Date.now()}`;
+                                img.src = newSrc;
+                                console.log(`[UI] Setting stream src for ${cam}: ${newSrc}`);
+                            }
+
+                            // Show Stream
+                            img.style.display = 'block';
+                            placeholder.style.display = 'none';
+                            if (loader) loader.style.display = 'none';
+
+                            // Update FPS (only if changed to avoid DOM thrashing)
+                            if (fpsEl) {
+                                const newFpsText = `${status.fps} FPS`;
+                                if (fpsEl.innerText !== newFpsText) {
+                                    fpsEl.innerText = newFpsText;
+                                    fpsEl.style.color = '#10b981';
+                                }
+                            }
+
+                        } else {
+                            // Offline / Standby
+                            if (img.style.display !== 'none') {
+                                img.style.display = 'none';
+                            }
+                            if (placeholder.style.display !== 'flex') {
+                                placeholder.style.display = 'flex';
+                            }
+                            if (loader && loader.style.display !== 'none') {
+                                loader.style.display = 'none';
+                            }
+                            if (statusText && statusText.innerText !== "OFFLINE") {
+                                statusText.innerText = "OFFLINE";
+                            }
+
+                            if (fpsEl && fpsEl.innerText !== '') {
+                                fpsEl.innerText = '';
+                            }
+                        }
+                    });
+
+                    // Update interval based on activity (only if changed)
+                    if (hasActiveStreams !== newHasActiveStreams) {
+                        hasActiveStreams = newHasActiveStreams;
+                        // Restart with appropriate interval
+                        stopHealthCheck();
+                        startHealthCheck();
+                    }
+
+                    const activeProcsEl = document.getElementById('active-procs');
+                    if (activeProcsEl) {
+                        const newCount = activeCount.toString();
+                        if (activeProcsEl.innerText !== newCount) {
+                            activeProcsEl.innerText = newCount;
+                        }
+                    }
+                })
+                .catch(e => {
+                    console.error('Health check failed:', e);
+                })
+                .finally(() => {
+                    healthCheckPending = false;
+                });
+        }
+
+        // Start health checking only when page is visible
+        function startHealthCheck() {
+            // Clear any existing interval first
+            if (healthCheckInterval !== null) {
+                clearInterval(healthCheckInterval);
+                healthCheckInterval = null;
+            }
+
+            // Only start if page is visible
+            if (!document.hidden) {
+                // Do immediate check
+                updateHealthStatus();
+
+                // Use dynamic interval: faster when streams are active, slower when idle
+                const interval = hasActiveStreams ? HEALTH_CHECK_INTERVAL_ACTIVE : HEALTH_CHECK_INTERVAL_IDLE;
+
+                // Set up interval for future checks
+                healthCheckInterval = setInterval(() => {
+                    updateHealthStatus();
+                }, interval);
+            }
+        }
+
+        // Stop health checking
+        function stopHealthCheck() {
+            if (healthCheckInterval !== null) {
+                clearInterval(healthCheckInterval);
+                healthCheckInterval = null;
+            }
+        }
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopHealthCheck();
+            } else {
+                startHealthCheck();
+            }
+        });
+
+        // Initial health check after page load (only once)
+        let healthCheckInitialized = false;
+        function initializeHealthCheck() {
+            if (!healthCheckInitialized) {
+                healthCheckInitialized = true;
+                setTimeout(startHealthCheck, 2000); // Wait 2 seconds after page load
+            }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeHealthCheck);
+        } else {
+            initializeHealthCheck();
+        }
+
+        loadConfig();
+    </script>
+</body>
+
+</html>
