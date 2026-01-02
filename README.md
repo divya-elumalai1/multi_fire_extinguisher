@@ -1,4 +1,4 @@
-# Multi Fire Extinguisher Robot System
+# Multi Fire Extinguisher Robot System 
 
 A comprehensive fire detection and monitoring system using multiple ESP32-CAM cameras with real-time machine learning inference, automated alerts, and remote robot control capabilities.
 
