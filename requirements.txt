@@ -1,0 +1,13 @@
+numpy<2.0
+torch==2.9.1
+torchvision==0.24.1
+opencv-python==4.9.0.80
+Pillow==11.3.0
+scikit-learn==1.6.1
+imutils==0.5.4
+matplotlib==3.9.4
+yagmail==0.15.293
+streamlit
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pyyaml==6.0.1
